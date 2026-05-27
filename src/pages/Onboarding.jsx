@@ -1,5 +1,16 @@
+import { useState, useRef } from 'react'
 import { useParams, useNavigate, Navigate } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import Layout from '../components/Layout'
+import Section1 from '../components/sections/Section1'
+import Section2 from '../components/sections/Section2'
+import { useOnboarding } from '../context/OnboardingContext'
+import { saveDraft } from '../lib/saveDraft'
+import { validateSection1, validateSection2 } from '../lib/validation'
+
+const SECTION_1_FIELDS = ['first_name', 'last_name', 'date_of_birth', 'nationality', 'passport_number', 'passport_expiry', 'phone', 'profile_photo_url']
+const SECTION_2_FIELDS = ['employment_status', 'employer_name', 'employed_since', 'monthly_net_income', 'people_moving_in', 'has_pets', 'pet_details', 'is_smoker']
+const SECTION_1_OPTIONAL = ['date_of_birth', 'nationality', 'passport_number', 'passport_expiry', 'profile_photo_url']
 
 const SECTIONS = {
   1: { title: 'About you', subtitle: 'Tell us a bit about yourself.' },
@@ -9,9 +20,22 @@ const SECTIONS = {
   5: { title: 'Platform accounts', subtitle: "Credentials for the platforms we'll use to apply." },
 }
 
+const slideVariants = {
+  enter: (dir) => ({ x: dir * 40, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir) => ({ x: dir * -40, opacity: 0 }),
+}
+
+function pickFields(formData, keys) {
+  return Object.fromEntries(keys.map((k) => [k, formData[k]]))
+}
+
 export default function Onboarding() {
   const { step } = useParams()
   const navigate = useNavigate()
+  const { formData, markSkipped } = useOnboarding()
+  const [errors, setErrors] = useState({})
+  const directionRef = useRef(1)
   const stepNum = parseInt(step, 10)
 
   if (!stepNum || stepNum < 1 || stepNum > 5) {
@@ -20,16 +44,58 @@ export default function Onboarding() {
 
   const section = SECTIONS[stepNum]
 
-  function handleBack() {
-    navigate(`/onboarding/${stepNum - 1}`)
+  function advance() {
+    directionRef.current = 1
+    if (stepNum < 5) navigate(`/onboarding/${stepNum + 1}`)
+    else navigate('/cover-letter')
   }
 
-  function handleContinue() {
-    if (stepNum < 5) {
-      navigate(`/onboarding/${stepNum + 1}`)
-    } else {
-      navigate('/cover-letter')
+  async function trySave(fields) {
+    try {
+      await saveDraft(fields)
+    } catch (err) {
+      console.error('Draft save failed:', err)
     }
+  }
+
+  async function handleContinue() {
+    const validate = stepNum === 1 ? validateSection1 : stepNum === 2 ? validateSection2 : null
+    if (validate) {
+      const errs = validate(formData)
+      if (Object.keys(errs).length > 0) {
+        setErrors(errs)
+        return
+      }
+    }
+    setErrors({})
+    if (stepNum === 1) await trySave(pickFields(formData, SECTION_1_FIELDS))
+    if (stepNum === 2) await trySave(pickFields(formData, SECTION_2_FIELDS))
+    advance()
+  }
+
+  async function handleSkip() {
+    if (stepNum === 1) {
+      const errs = validateSection1(formData)
+      if (Object.keys(errs).length > 0) {
+        setErrors(errs)
+        return
+      }
+      const emptyOptionals = SECTION_1_OPTIONAL.filter((f) => !formData[f])
+      if (emptyOptionals.length > 0) markSkipped(emptyOptionals)
+      await trySave(pickFields(formData, SECTION_1_FIELDS))
+    } else if (stepNum === 2) {
+      const updatedSkipped = [...new Set([...formData.skipped_fields, ...SECTION_2_FIELDS])]
+      markSkipped(SECTION_2_FIELDS)
+      await trySave({ skipped_fields: updatedSkipped })
+    }
+    setErrors({})
+    advance()
+  }
+
+  function handleBack() {
+    setErrors({})
+    directionRef.current = -1
+    navigate(`/onboarding/${stepNum - 1}`)
   }
 
   return (
@@ -39,9 +105,22 @@ export default function Onboarding() {
       subtitle={section.subtitle}
       onBack={handleBack}
       onContinue={handleContinue}
-      onSkip={handleContinue}
+      onSkip={handleSkip}
     >
-      {/* Section {stepNum} fields added in Phase 2/3/4/5 */}
+      <AnimatePresence mode="wait" custom={directionRef.current}>
+        <motion.div
+          key={stepNum}
+          custom={directionRef.current}
+          variants={slideVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ duration: 0.2, ease: 'easeInOut' }}
+        >
+          {stepNum === 1 && <Section1 errors={errors} />}
+          {stepNum === 2 && <Section2 errors={errors} />}
+        </motion.div>
+      </AnimatePresence>
     </Layout>
   )
 }
