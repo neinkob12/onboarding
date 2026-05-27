@@ -11,6 +11,7 @@ export default function Layout({
   onContinue,
   onSkip,
   continueLabel = 'Continue',
+  continueDisabled = false,
   hideSkip = false,
 }) {
   return (
@@ -37,7 +38,7 @@ export default function Layout({
               </Button>
             )}
             <div className="flex-1">
-              <Button variant="primary" onClick={onContinue} fullWidth>
+              <Button variant="primary" onClick={onContinue} fullWidth disabled={continueDisabled}>
                 {continueLabel}
               </Button>
             </div>

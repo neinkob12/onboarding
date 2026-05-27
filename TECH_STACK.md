@@ -52,6 +52,8 @@ api/
 ```
 VITE_SUPABASE_URL
 VITE_SUPABASE_ANON_KEY
+VITE_NOTIFY_WEBHOOK_URL    # Supabase Edge Function URL for submission notifications
+VITE_WHATSAPP_NUMBER       # E.164 format without +, e.g. 4915123456789 — shown on Done screen
 ANTHROPIC_API_KEY          # server-side only, no VITE_ prefix
 ```
 
