@@ -40,14 +40,14 @@ const INITIAL_STATE = {
   documents_checklist: {},
 
   // Section 5: Platform accounts
-  is24_has_account: false,
+  is24_has_account: true,
   is24_has_plus: false,
   is24_email: '',
   is24_password_encrypted: '',
-  kaz_has_account: false,
+  kaz_has_account: true,
   kaz_email: '',
   kaz_password_encrypted: '',
-  wgg_has_account: false,
+  wgg_has_account: true,
   wgg_email: '',
   wgg_password_encrypted: '',
 

@@ -5,13 +5,17 @@ import Layout from '../components/Layout'
 import Section1 from '../components/sections/Section1'
 import Section2 from '../components/sections/Section2'
 import Section3 from '../components/sections/Section3'
+import Section4 from '../components/sections/Section4'
+import Section5 from '../components/sections/Section5'
 import { useOnboarding } from '../context/OnboardingContext'
 import { saveDraft } from '../lib/saveDraft'
-import { validateSection1, validateSection2, validateSection3 } from '../lib/validation'
+import { validateSection1, validateSection2, validateSection3, validateSection4 } from '../lib/validation'
 
 const SECTION_1_FIELDS = ['first_name', 'last_name', 'date_of_birth', 'nationality', 'passport_number', 'passport_expiry', 'phone', 'profile_photo_url']
 const SECTION_2_FIELDS = ['employment_status', 'employer_name', 'employed_since', 'monthly_net_income', 'people_moving_in', 'has_pets', 'pet_details', 'is_smoker']
 const SECTION_3_FIELDS = ['districts', 'apartment_types', 'min_size_sqm', 'max_rent_warm', 'furnished_preference', 'earliest_move_in', 'intended_rental_duration', 'hard_requirements', 'nice_to_haves', 'extra_notes']
+const SECTION_4_FIELDS = ['google_drive_folder_url', 'documents_checklist']
+const SECTION_5_FIELDS = ['is24_has_account', 'is24_has_plus', 'is24_email', 'is24_password_encrypted', 'kaz_has_account', 'kaz_email', 'kaz_password_encrypted', 'wgg_has_account', 'wgg_email', 'wgg_password_encrypted']
 const SECTION_1_OPTIONAL = ['date_of_birth', 'nationality', 'passport_number', 'passport_expiry', 'profile_photo_url']
 
 const SECTIONS = {
@@ -61,7 +65,12 @@ export default function Onboarding() {
   }
 
   async function handleContinue() {
-    const validate = stepNum === 1 ? validateSection1 : stepNum === 2 ? validateSection2 : stepNum === 3 ? validateSection3 : null
+    const validate =
+      stepNum === 1 ? validateSection1 :
+      stepNum === 2 ? validateSection2 :
+      stepNum === 3 ? validateSection3 :
+      stepNum === 4 ? validateSection4 :
+      null
     if (validate) {
       const errs = validate(formData)
       if (Object.keys(errs).length > 0) {
@@ -73,6 +82,8 @@ export default function Onboarding() {
     if (stepNum === 1) await trySave(pickFields(formData, SECTION_1_FIELDS))
     if (stepNum === 2) await trySave(pickFields(formData, SECTION_2_FIELDS))
     if (stepNum === 3) await trySave(pickFields(formData, SECTION_3_FIELDS))
+    if (stepNum === 4) await trySave(pickFields(formData, SECTION_4_FIELDS))
+    if (stepNum === 5) await trySave(pickFields(formData, SECTION_5_FIELDS))
     advance()
   }
 
@@ -93,6 +104,15 @@ export default function Onboarding() {
     } else if (stepNum === 3) {
       const updatedSkipped = [...new Set([...formData.skipped_fields, ...SECTION_3_FIELDS])]
       markSkipped(SECTION_3_FIELDS)
+      await trySave({ skipped_fields: updatedSkipped })
+    } else if (stepNum === 4) {
+      const errs = validateSection4(formData)
+      if (Object.keys(errs).length > 0) {
+        setErrors(errs)
+        return
+      }
+      const updatedSkipped = [...new Set([...formData.skipped_fields, ...SECTION_4_FIELDS])]
+      markSkipped(SECTION_4_FIELDS)
       await trySave({ skipped_fields: updatedSkipped })
     }
     setErrors({})
@@ -127,6 +147,8 @@ export default function Onboarding() {
           {stepNum === 1 && <Section1 errors={errors} />}
           {stepNum === 2 && <Section2 errors={errors} />}
           {stepNum === 3 && <Section3 errors={errors} />}
+          {stepNum === 4 && <Section4 errors={errors} />}
+          {stepNum === 5 && <Section5 errors={errors} />}
         </motion.div>
       </AnimatePresence>
     </Layout>

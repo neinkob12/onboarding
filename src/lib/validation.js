@@ -20,3 +20,27 @@ export function validateSection3(formData) {
   if (!formData.max_rent_warm) errors.max_rent_warm = 'Maximum rent is required'
   return errors
 }
+
+export function validateSection4(formData) {
+  const errors = {}
+  const url = formData.google_drive_folder_url?.trim()
+  if (url && !url.startsWith('https://drive.google.com')) {
+    errors.google_drive_folder_url = 'Must be a Google Drive folder link'
+  }
+  return errors
+}
+
+export function validateSection5(formData) {
+  const warnings = {}
+  const platforms = ['is24', 'kaz', 'wgg']
+  for (const key of platforms) {
+    if (formData[`${key}_has_account`]) {
+      const email = formData[`${key}_email`]?.trim()
+      const password = formData[`${key}_password_encrypted`]?.trim()
+      if (!email && !password) continue
+      if (!email) warnings[`${key}_email`] = 'Email is missing'
+      if (!password) warnings[`${key}_password_encrypted`] = 'Password is missing'
+    }
+  }
+  return warnings
+}
