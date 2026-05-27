@@ -4,12 +4,14 @@ import { AnimatePresence, motion } from 'framer-motion'
 import Layout from '../components/Layout'
 import Section1 from '../components/sections/Section1'
 import Section2 from '../components/sections/Section2'
+import Section3 from '../components/sections/Section3'
 import { useOnboarding } from '../context/OnboardingContext'
 import { saveDraft } from '../lib/saveDraft'
-import { validateSection1, validateSection2 } from '../lib/validation'
+import { validateSection1, validateSection2, validateSection3 } from '../lib/validation'
 
 const SECTION_1_FIELDS = ['first_name', 'last_name', 'date_of_birth', 'nationality', 'passport_number', 'passport_expiry', 'phone', 'profile_photo_url']
 const SECTION_2_FIELDS = ['employment_status', 'employer_name', 'employed_since', 'monthly_net_income', 'people_moving_in', 'has_pets', 'pet_details', 'is_smoker']
+const SECTION_3_FIELDS = ['districts', 'apartment_types', 'min_size_sqm', 'max_rent_warm', 'furnished_preference', 'earliest_move_in', 'intended_rental_duration', 'hard_requirements', 'nice_to_haves', 'extra_notes']
 const SECTION_1_OPTIONAL = ['date_of_birth', 'nationality', 'passport_number', 'passport_expiry', 'profile_photo_url']
 
 const SECTIONS = {
@@ -59,7 +61,7 @@ export default function Onboarding() {
   }
 
   async function handleContinue() {
-    const validate = stepNum === 1 ? validateSection1 : stepNum === 2 ? validateSection2 : null
+    const validate = stepNum === 1 ? validateSection1 : stepNum === 2 ? validateSection2 : stepNum === 3 ? validateSection3 : null
     if (validate) {
       const errs = validate(formData)
       if (Object.keys(errs).length > 0) {
@@ -70,6 +72,7 @@ export default function Onboarding() {
     setErrors({})
     if (stepNum === 1) await trySave(pickFields(formData, SECTION_1_FIELDS))
     if (stepNum === 2) await trySave(pickFields(formData, SECTION_2_FIELDS))
+    if (stepNum === 3) await trySave(pickFields(formData, SECTION_3_FIELDS))
     advance()
   }
 
@@ -86,6 +89,10 @@ export default function Onboarding() {
     } else if (stepNum === 2) {
       const updatedSkipped = [...new Set([...formData.skipped_fields, ...SECTION_2_FIELDS])]
       markSkipped(SECTION_2_FIELDS)
+      await trySave({ skipped_fields: updatedSkipped })
+    } else if (stepNum === 3) {
+      const updatedSkipped = [...new Set([...formData.skipped_fields, ...SECTION_3_FIELDS])]
+      markSkipped(SECTION_3_FIELDS)
       await trySave({ skipped_fields: updatedSkipped })
     }
     setErrors({})
@@ -119,6 +126,7 @@ export default function Onboarding() {
         >
           {stepNum === 1 && <Section1 errors={errors} />}
           {stepNum === 2 && <Section2 errors={errors} />}
+          {stepNum === 3 && <Section3 errors={errors} />}
         </motion.div>
       </AnimatePresence>
     </Layout>

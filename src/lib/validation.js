@@ -12,3 +12,11 @@ export function validateSection2(formData) {
   if (!formData.monthly_net_income) errors.monthly_net_income = 'Monthly income is required'
   return errors
 }
+
+export function validateSection3(formData) {
+  const errors = {}
+  if (!formData.districts?.length) errors.districts = 'Select at least one district'
+  if (!formData.apartment_types?.length) errors.apartment_types = 'Select at least one apartment type'
+  if (!formData.max_rent_warm) errors.max_rent_warm = 'Maximum rent is required'
+  return errors
+}

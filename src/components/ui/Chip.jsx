@@ -4,6 +4,7 @@ export default function Chip({
   selected = false,
   onSelect,
   onRemove,
+  variant = 'blue',
 }) {
   if (mode === 'removable') {
     return (
@@ -21,6 +22,8 @@ export default function Chip({
     )
   }
 
+  const selectedClass = variant === 'green' ? 'bg-success text-white' : 'bg-accent text-white'
+
   return (
     <button
       type="button"
@@ -28,11 +31,8 @@ export default function Chip({
       className={[
         'inline-flex items-center px-3 py-1 rounded-chip text-[13px] font-medium',
         'transition-all duration-200 cursor-pointer select-none',
-        selected
-          ? 'bg-accent text-white'
-          : 'bg-bg-section text-text-primary hover:bg-gray-200',
-      ]
-        .join(' ')}
+        selected ? selectedClass : 'bg-bg-section text-text-primary hover:bg-gray-200',
+      ].join(' ')}
     >
       {label}
     </button>
